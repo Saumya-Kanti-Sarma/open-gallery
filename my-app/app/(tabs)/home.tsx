@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  FlatList,
   Pressable,
-  Modal,
-  Dimensions,
   Text,
 } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
-import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GridImage from '@/components/Image/GridImage';
 import ListImage from '@/components/Image/ListImage';
-
-const { width, height } = Dimensions.get('window');
-
+import FullView from '@/components/Image/FullView';
 
 export default function HomePage() {
   const [permission, requestPermission] = MediaLibrary.usePermissions();
@@ -22,6 +16,7 @@ export default function HomePage() {
   const [view, setView] = useState("grid");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  const inset = useSafeAreaInsets();
   const handleToggleView = () => setView((prev) => prev == "grid" ? "list" : "grid")
   //permission + Load Photos
   useEffect(() => {
@@ -59,77 +54,36 @@ export default function HomePage() {
   }, [permission]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
-        <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'flex-end', gap: 10, marginRight: 10, alignItems: 'center' }}>
-          <Pressable
-            onPress={handleToggleView}
-            style={{ backgroundColor: "orange", padding: 10, width: 100, borderRadius: 6, marginTop: 5 }}><Text style={{ textAlign: 'center' }}>Grid</Text></Pressable>
-          <Pressable
-            onPress={handleToggleView}
-            style={{ backgroundColor: "orange", padding: 10, width: 100, borderRadius: 6, marginTop: 5 }}><Text style={{ textAlign: 'center' }}>Row</Text></Pressable>
-        </View>
-        {
-          view == "grid" ? (
-            <GridImage
-              photos={photos}
-              onPressPhoto={(index) => setSelectedIndex(index)}
-              columns={4}
-            />
-          ) : (
-            <ListImage photos={photos} onPressPhoto={(index) => setSelectedIndex(index)} />
-          )
-        }
-        {/* <ListImage photos={photos} onPressPhoto={(index) => setSelectedIndex(index)} /> */}
-
-        {/* 🔍 Fullscreen Viewer */}
-        <Modal visible={selectedIndex !== null} transparent>
-          <FlatList
-            data={photos}
-            horizontal
-            pagingEnabled
-            initialScrollIndex={selectedIndex ?? 0}
-            getItemLayout={(_, index) => ({
-              length: width,
-              offset: width * index,
-              index,
-            })}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'black',
-                }}
-              >
-                <Image
-                  source={{ uri: item.uri }}
-                  style={{ width, height, backgroundColor: "yellow" }}
-                  contentFit="contain"
-                />
-                <Text style={{ color: "orange" }}>{item.filename}</Text>
-              </View>
-            )}
-          />
-
-          {/* ❌ Close Button */}
-          <Pressable
-            onPress={() => setSelectedIndex(null)}
-            style={{
-              position: 'absolute',
-              top: 50,
-              right: 20,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              padding: 10,
-              borderRadius: 20,
-            }}
-          >
-            <Text style={{ color: 'white' }}>Close</Text>
-          </Pressable>
-        </Modal>
-
+    <View style={{ flex: 1, marginTop: inset.top }}>
+      <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'flex-end', gap: 10, marginRight: 10, alignItems: 'center' }}>
+        <Pressable
+          onPress={handleToggleView}>
+          <Text style={{ textAlign: 'center' }}>Grid</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleToggleView}>
+          <Text style={{ textAlign: 'center' }}>Row</Text>
+        </Pressable>
       </View>
-    </SafeAreaView>
+      {
+        view == "grid" ? (
+          <GridImage
+            photos={photos}
+            onPressPhoto={(index) => setSelectedIndex(index)}
+            columns={4}
+          />
+        ) : (
+          <ListImage photos={photos} onPressPhoto={(index) => setSelectedIndex(index)} />
+        )
+      }
+      {/* Fullscreen Viewer */}
+      <FullView
+        visible={selectedIndex !== null}
+        photos={photos}
+        initialIndex={selectedIndex ?? 0}
+        onClose={() => setSelectedIndex(null)}
+      />
+
+    </View>
   );
 }
