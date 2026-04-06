@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Pressable, Text, useWindowDimensions } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import { View, Pressable, Text } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GridImage from '@/components/Image/GridImage';
 import ListImage from '@/components/Image/ListImage';
 import FullView from '@/components/Image/FullView';
@@ -18,117 +11,106 @@ export default function HomePage() {
   const [photos, setPhotos] = useState<MediaLibrary.Asset[]>([]);
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [endCursor, setEndCursor] = useState<string | undefined>(undefined);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const translateX = useSharedValue(0);
-  const inset = useSafeAreaInsets();
+  const loadPhotos = async (cursor?: string) => {
+    if (!permission) return;
 
-  const snapTo = (target: 'grid' | 'list') => {
-    translateX.value = withSpring(target === 'grid' ? 0 : -SCREEN_WIDTH, {
-      damping: 30, stiffness: 300, mass: 0.8
-    });
-    setView(target);
-  };
+    if (!permission.granted) {
+      const res = await requestPermission();
+      if (!res.granted) return;
+    }
 
-  const currentPage = useSharedValue(0); // 0 = grid, 1 = list
+    if (isLoading) return;
 
-  const gesture = Gesture.Pan()
-    .runOnJS(true)
-    .activeOffsetX([-1, 1])
-    .failOffsetY([-10, 10])
-    .onUpdate((e) => {
-      const base = currentPage.value === 0 ? 0 : -SCREEN_WIDTH; // what's hapenning hr
-      const next = base + e.translationX;
-      translateX.value = Math.max(-SCREEN_WIDTH, Math.min(0, next));
-    })
-    .onEnd((e) => {
-      const THRESHOLD = SCREEN_WIDTH * 0.3;
-      if (e.translationX < -THRESHOLD) {
-        currentPage.value = 1;
-        snapTo('list');
-      } else if (e.translationX > THRESHOLD) {
-        currentPage.value = 0;
-        snapTo('grid');
-      } else {
-        snapTo(currentPage.value === 0 ? 'grid' : 'list');
-      }
-    });
+    setIsLoading(true);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  useEffect(() => {
-    const loadPhotos = async () => {
-      if (!permission) return;
-      if (!permission.granted) {
-        const res = await requestPermission();
-        if (!res.granted) return;
-      }
+    try {
       const media = await MediaLibrary.getAssetsAsync({
-        mediaType: ['photo', 'video'],
-        first: 100,
+        mediaType: ['photo'],
+        first: 40, // ✅ reduced batch size
+        after: cursor,
         sortBy: ['creationTime'],
       });
-      setPhotos(media.assets);
-    };
+
+      if (!cursor) {
+        setTotalCount(media.totalCount);
+      }
+
+      setTimeout(() => {
+        setPhotos((prev) =>
+          cursor ? [...prev, ...media.assets] : media.assets
+        );
+      }, 1000);
+
+      setEndCursor(media.endCursor);
+      setHasMore(media.hasNextPage);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasMore && !isLoading) {
+      loadPhotos(endCursor);
+    }
+  };
+
+  useEffect(() => {
     loadPhotos();
   }, [permission]);
 
   return (
     <View style={{ flex: 1 }}>
-
-      {/* Toggle buttons */}
+      {/* Toggle */}
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginRight: 10 }}>
-        <Pressable onPress={() => snapTo('grid')}>
+        <Pressable onPress={() => setView('grid')}>
           <Text style={{
             fontWeight: view === 'grid' ? 'bold' : 'normal',
-            color: view == "grid" ? theme.colors.green : theme.colors.text
-          }}>Grid</Text>
+            color: view === 'grid' ? theme.colors.green : theme.colors.text
+          }}>
+            Grid
+          </Text>
         </Pressable>
-        <Pressable onPress={() => snapTo('list')}>
+
+        <Pressable onPress={() => setView('list')}>
           <Text style={{
             fontWeight: view === 'list' ? 'bold' : 'normal',
-            color: view == 'list' ? theme.colors.green : theme.colors.text
-          }}>List</Text>
+            color: view === 'list' ? theme.colors.green : theme.colors.text
+          }}>
+            List
+          </Text>
         </Pressable>
       </View>
 
-      <GestureHandlerRootView style={{ flex: 1, overflow: 'hidden' }}>
-        <GestureDetector gesture={gesture}>
-          <Animated.View style={{ flex: 1 }}>
-
-            {/* ✅ Row that is 2× the screen width — both views always mounted */}
-            <Animated.View style={[
-              {
-                flex: 1,
-                flexDirection: 'row',
-                width: SCREEN_WIDTH * 2,
-              },
-              animatedStyle,
-            ]}>
-
-              {/* Page 1: Grid */}
-              <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
-                <GridImage
-                  photos={photos}
-                  onPressPhoto={setSelectedIndex}
-                  columns={4}
-                />
-              </View>
-
-              {/* Page 2: List */}
-              <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
-                <ListImage
-                  photos={photos}
-                  onPressPhoto={setSelectedIndex}
-                />
-              </View>
-
-            </Animated.View>
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
+      {/* ✅ ONLY ONE LIST RENDERED */}
+      {view === 'grid' ? (
+        <GridImage
+          photos={photos}
+          onPressPhoto={setSelectedIndex}
+          columns={4}
+          onEndReached={loadMore}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          loadedCount={photos.length}
+          totalCount={totalCount}
+        />
+      ) : (
+        <ListImage
+          photos={photos}
+          onPressPhoto={setSelectedIndex}
+          onEndReached={loadMore}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          loadedCount={photos.length}
+          totalCount={totalCount}
+        />
+      )}
 
       <FullView
         visible={selectedIndex !== null}

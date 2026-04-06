@@ -47,7 +47,9 @@ export default function FullView({ visible, photos, initialIndex, onClose }: Pro
             data={photos}
             horizontal
             pagingEnabled
-            initialScrollIndex={initialIndex}
+            scrollEventThrottle={16}
+            removeClippedSubviews={true}
+            initialScrollIndex={Math.min(initialIndex, photos.length - 1)}
             getItemLayout={(_, index) => ({
               length: width,
               offset: width * index,
@@ -60,6 +62,7 @@ export default function FullView({ visible, photos, initialIndex, onClose }: Pro
                   source={{ uri: item.uri }}
                   style={{ width, height }}
                   contentFit="contain"
+                  cachePolicy="memory-disk"
                 />
                 <Text style={{ color: 'white', marginTop: 10 }}>{item.filename}</Text>
               </View>

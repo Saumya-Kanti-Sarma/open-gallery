@@ -1,18 +1,56 @@
 import React from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
+import { theme } from '@/constants/theme';
 
 type Props = {
   photos: any[];
   onPressPhoto: (index: number) => void;
+  onEndReached?: () => void;
+  isLoading?: boolean;
+  hasMore?: boolean;
+  loadedCount?: number;
+  totalCount?: number;
 };
 
-export default function ListImage({ photos, onPressPhoto }: Props) {
+export default function ListImage({
+  photos,
+  onPressPhoto,
+  onEndReached,
+  isLoading = false,
+  hasMore = true,
+  loadedCount = 0,
+  totalCount = 0,
+}: Props) {
+  const renderFooter = () => {
+    if (!hasMore && photos.length > 0) {
+      return (
+        <View style={{ padding: 16, alignItems: 'center' }}>
+          <Text style={{ color: theme.colors.text, fontSize: 12 }}>
+            All {totalCount} items loaded
+          </Text>
+        </View>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <View style={{ padding: 16, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color={theme.colors.green} />
+          <Text style={{ marginTop: 8, color: theme.colors.text, fontSize: 12 }}>
+            Loading {loadedCount} of {totalCount}...
+          </Text>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <FlatList
       data={photos}
-      // keyExtractor={(item) => item.id}
-      // contentContainerStyle={{ padding: 10 }}
+      keyExtractor={(item) => item.filename}
       renderItem={({ item, index }) => (
         <Pressable
           onPress={() => onPressPhoto(index)}
@@ -24,10 +62,12 @@ export default function ListImage({ photos, onPressPhoto }: Props) {
             marginBottom: 10,
             backgroundColor: '#f7f3f3',
           }}
+          key={index}
         >
-          {/* 🖼 Left Thumbnail */}
+          {/*Left Thumbnail */}
           <Image
             source={{ uri: item.uri }}
+            key={index}
             style={{
               width: 70,
               height: 70,
@@ -35,6 +75,7 @@ export default function ListImage({ photos, onPressPhoto }: Props) {
               marginRight: 12,
             }}
             contentFit="cover"
+            cachePolicy="memory-disk"
           />
 
           {/* 📄 Right Content */}
@@ -60,6 +101,20 @@ export default function ListImage({ photos, onPressPhoto }: Props) {
           </View>
         </Pressable>
       )}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={15}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={20}
+      windowSize={10}
+      scrollEventThrottle={16}
+      getItemLayout={(data, index) => ({
+        length: 100,
+        offset: 100 * index,
+        index,
+      })}
     />
   );
 }
