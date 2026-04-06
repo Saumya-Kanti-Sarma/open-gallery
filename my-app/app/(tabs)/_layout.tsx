@@ -2,13 +2,39 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/constants/theme';
-import { StatusBar } from 'react-native';
+import { StatusBar, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   return (
 
     <>
       <StatusBar barStyle={"dark-content"} />
+      <View style={{
+        display: "flex",
+        justifyContent: "space-between",
+        marginTop: insets.top
+      }}>
+        <View style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          gap: 1
+        }}>
+          <Image
+            source={require("@/assets/images/app-logo.png")}
+            style={{ width: 72, aspectRatio: 1 }}
+            contentFit="cover" />
+          <Text style={{
+            fontWeight: "bold",
+            color: theme.colors.green,
+            textAlign: "center",
+            fontSize: theme.fontSize.xxl
+          }}>Open Gallery</Text>
+
+        </View>
+      </View>
       <Tabs
         screenOptions={{
           headerShown: false,
