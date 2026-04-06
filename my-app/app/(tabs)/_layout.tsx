@@ -1,43 +1,58 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { theme } from '@/constants/theme';
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   return (
     <Tabs
-      initialRouteName="home"
-      screenOptions={({ route }) => ({
+      screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#007aff',
+        tabBarActiveTintColor: theme.colors.green,
         tabBarInactiveTintColor: '#8e8e93',
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: theme.colors.white,
           paddingBottom: insets.bottom,
           height: 60 + insets.bottom,
         },
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-          if (route.name === 'home') {
-            iconName = 'home-outline';
-          } else if (route.name === 'albums') {
-            iconName = 'albums-outline';
-          } else if (route.name === 'favourites') {
-            iconName = 'heart-outline';
-          } else if (route.name === 'settings') {
-            iconName = 'settings-outline';
-          } else {
-            iconName = 'help-outline'; // fallback
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
+      }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Home' }} />
-      <Tabs.Screen name="albums" options={{ title: 'Albums' }} />
-      <Tabs.Screen name="favourites" options={{ title: 'Favourites' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "home",
+          tabBarIcon: (({ color, focused }) => (
+            <Ionicons name={focused ? "home-sharp" : "home-outline"} color={color} size={24} />
+          ))
+        }} />
+      <Tabs.Screen
+        name="albums"
+        options={{
+          title: "albums",
+          tabBarIcon: (({ color, focused }) => (
+            <Ionicons name={focused ? "albums-sharp" : "albums-outline"} color={color} size={24} />
+          ))
+        }} />
+
+      <Tabs.Screen
+        name="favourites"
+        options={{
+          title: "favourite",
+          tabBarIcon: (({ color, focused }) => (
+            <Ionicons name={focused ? "heart-sharp" : "heart-outline"} color={color} size={24} />
+          ))
+        }} />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "settings",
+          tabBarIcon: (({ color, focused }) => (
+            <Ionicons name={focused ? "settings" : "settings-outline"} color={color} size={24} />
+          ))
+        }} />
+
+
     </Tabs>
   );
 }
