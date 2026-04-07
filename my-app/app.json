@@ -1,13 +1,12 @@
 {
   "expo": {
-    "name": "my-app",
+    "name": "Open Gallery",
     "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    // "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -18,7 +17,6 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      // "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.saumyasarma.myapp"
     },
@@ -31,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/app-logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -50,6 +48,7 @@
       "eas": {
         "projectId": "9be42d8d-8690-4def-827b-41602bedc6ca"
       }
-    }
+    },
+    "owner": "saumyasarma"
   }
 }
