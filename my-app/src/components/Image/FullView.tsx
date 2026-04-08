@@ -22,7 +22,7 @@ type Props = {
 
 export default function FullView({ visible, photos, initialIndex, onClose }: Props) {
 
-  // ✅ Android hardware back button
+  //  Android hardware back button
   React.useEffect(() => {
     if (!visible) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -36,8 +36,8 @@ export default function FullView({ visible, photos, initialIndex, onClose }: Pro
     <Modal
       visible={visible}
       transparent
-      animationType="slide"         // ✅ built-in enter animation
-      onRequestClose={onClose}      // ✅ Android back button fallback
+      animationType="slide"         //  built-in enter animation
+      onRequestClose={onClose}      //  Android back button fallback
       statusBarTranslucent
     >
       <>
