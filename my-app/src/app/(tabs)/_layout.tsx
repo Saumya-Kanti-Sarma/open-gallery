@@ -9,7 +9,6 @@ const TopTabs = withLayoutContext(Navigator);
 export default function RootLayout() {
   return (
     <>
-      <StatusBar barStyle={"dark-content"} />
       <TopTabs
         screenOptions={{
           tabBarStyle: { display: "none" },
