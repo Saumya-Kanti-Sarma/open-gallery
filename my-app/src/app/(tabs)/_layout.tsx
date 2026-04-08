@@ -1,7 +1,6 @@
 import { TabBar } from '@/src/components/TabBar';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { withLayoutContext } from 'expo-router';
-import { StatusBar } from 'react-native';
 
 const { Navigator } = createMaterialTopTabNavigator();
 const TopTabs = withLayoutContext(Navigator);

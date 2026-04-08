@@ -1,36 +1,33 @@
 {
   "expo": {
     "name": "Open Gallery",
-    "slug": "my-app",
+    "slug": "open-gallery",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-logo.png",
+    "icon": "./assets/images/1024.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/1024.png"
     },
     "android": {
+      "package": "com.saumyasarma.opengallery",
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.saumyasarma.myapp"
+        "foregroundImage": "./assets/images/1024.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/50px-app-logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/app-logo.png",
-          "imageWidth": 200,
+          "image": "./assets/images/100px-app-logo.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {

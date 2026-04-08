@@ -40,6 +40,7 @@ function Layout() {
                 fontSize: 18,
                 fontWeight: "600",
                 color: theme.colors.text,
+                marginLeft: 10
               }}
             >
               Open Gallery
@@ -49,7 +50,7 @@ function Layout() {
           headerLeft: () => (
             <View style={{ marginLeft: 12 }}>
               <Image
-                source={require("@/assets/images/app-logo.png")}
+                source={require("@/assets/images/50px-app-logo.png")}
                 style={{ width: 32, height: 32, borderRadius: 8 }}
               />
             </View>

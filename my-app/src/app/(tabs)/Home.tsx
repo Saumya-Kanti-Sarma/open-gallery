@@ -6,9 +6,10 @@ export default function Home() {
   const theme = useTheme();
   return (
     <View style={{
-      backgroundColor: theme.colors.background
+      backgroundColor: theme.colors.background,
+      height: '100%'
     }}>
-      <Text>Home</Text>
+      <Text style={{ color: theme.colors.text }}>Home</Text>
     </View>
   )
 }
