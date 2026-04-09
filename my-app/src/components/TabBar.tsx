@@ -15,10 +15,10 @@ type routeTypes = {
 };
 
 const routes: routeTypes[] = [
-  { name: "Home", path: "/Home", icon: ["home-outline", "home"] },
-  { name: "Albums", path: "/Albums", icon: ["albums-outline", "albums"] },
-  { name: "Favourites", path: "/Favourites", icon: ["heart-outline", "heart"] },
-  { name: "Settings", path: "/Settings", icon: ["settings-outline", "settings"] },
+  { name: "Home", path: "/home", icon: ["home-outline", "home"] },
+  { name: "Albums", path: "/albums", icon: ["albums-outline", "albums"] },
+  { name: "Favourites", path: "/favourites", icon: ["heart-outline", "heart"] },
+  { name: "Settings", path: "/settings", icon: ["settings-outline", "settings"] },
 ];
 
 export function TabBar() {
