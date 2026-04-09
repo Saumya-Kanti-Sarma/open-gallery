@@ -40,12 +40,12 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "owner": "saumyasarma",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "299927ff-a551-49eb-8d99-7fa7accc423b"
+        "projectId": "ff9a8998-64d9-42bb-9693-6944b4cb973e"
       }
-    },
-    "owner": "saumyasarma"
+    }
   }
 }
