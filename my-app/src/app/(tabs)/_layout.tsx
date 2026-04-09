@@ -13,12 +13,11 @@ export default function TabLayout() {
           tabBarStyle: { display: "none" },
         }}
       >
-        <TopTabs.Screen name="Home" />
-        <TopTabs.Screen name="Albums" />
-        <TopTabs.Screen name="Favourites" />
-        <TopTabs.Screen name="Settings" />
+        <TopTabs.Screen name="home" />
+        <TopTabs.Screen name="albums" />
+        <TopTabs.Screen name="favourites" />
+        <TopTabs.Screen name="settings" />
       </TopTabs>
-
       <TabBar />
     </>
   );
