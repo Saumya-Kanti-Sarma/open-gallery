@@ -14,23 +14,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { useTheme } from '@/theme/ThemeProvider';
-import Album, { ALBUM_CARD_SIZE } from '@/src/components/Album/Album';
+import Album from '@/src/components/Album/Album';
+import ImageViewer from '@/src/components/Image/ImageViewer';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GAP = 2;
 
 // ─── Reusable grid image (same as home) ──────────────────────────────────────
-const GalleryImage = React.memo(({ uri, numColumns }: { uri: string; numColumns: number }) => {
+const GalleryImage = React.memo(({ uri, numColumns, onPress }: { uri: string; numColumns: number; onPress: () => void }) => {
   const itemSize = (SCREEN_WIDTH - GAP * (numColumns + 1)) / numColumns;
   return (
-    <View style={[styles.imageWrapper, { width: itemSize, height: itemSize }]}>
+    <Pressable style={[styles.imageWrapper, { width: itemSize, height: itemSize }]} onPress={onPress}>
       <Image
         source={{ uri }}
         style={styles.image}
         contentFit="cover"
         recyclingKey={uri}
       />
-    </View>
+    </Pressable>
   );
 });
 
@@ -48,6 +49,7 @@ function AlbumDetail({
   const [hasNext, setHasNext] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [numColumns, setNumColumns] = useState(3);
+  const [viewerIndex, setViewerIndex] = useState(-1);
   const hasInitialized = useRef(false);
 
   const itemSize = (SCREEN_WIDTH - GAP * (numColumns + 1)) / numColumns;
@@ -115,7 +117,13 @@ function AlbumDetail({
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.gridContainer}
           columnWrapperStyle={styles.columnWrapper}
-          renderItem={({ item }) => <GalleryImage uri={item.uri} numColumns={numColumns} />}
+          renderItem={({ item, index }) => (
+            <GalleryImage
+              uri={item.uri}
+              numColumns={numColumns}
+              onPress={() => setViewerIndex(index)}
+            />
+          )}
           getItemLayout={(_, index) => ({
             length: itemSize,
             offset: itemSize * Math.floor(index / numColumns),
@@ -140,6 +148,13 @@ function AlbumDetail({
           }
         />
       </GestureDetector>
+
+      <ImageViewer
+        photos={images}
+        initialIndex={viewerIndex >= 0 ? viewerIndex : 0}
+        visible={viewerIndex >= 0}
+        onClose={() => setViewerIndex(-1)}
+      />
     </View>
   );
 }

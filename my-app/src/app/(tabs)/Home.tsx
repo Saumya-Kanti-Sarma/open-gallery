@@ -1,69 +1,60 @@
-import { View, FlatList, StyleSheet, Text, Dimensions } from 'react-native'
+import { View, FlatList, StyleSheet, Text, Dimensions, Pressable } from 'react-native'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import * as MediaLibrary from "expo-media-library";
 import { Image } from 'expo-image';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { runOnJS, useSharedValue } from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
+import ImageViewer from '@/src/components/Image/ImageViewer';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GAP = 2;
 
-const GalleryImage = React.memo(({ uri }: { uri: string }) => (
-  <View style={styles.imageWrapper}>
+type Photo = { id: string; uri: string };
+
+const GalleryImage = React.memo(({ uri, onPress }: { uri: string; onPress: () => void }) => (
+  <Pressable style={styles.imageWrapper} onPress={onPress}>
     <Image
       source={{ uri }}
       style={styles.image}
       contentFit="cover"
       recyclingKey={uri}
     />
-  </View>
+  </Pressable>
 ));
 
 export default function Home() {
-  const [galleryImages, setGalleryImages] = useState<{ id: string; uri: string }[]>([]);
+  const [galleryImages, setGalleryImages] = useState<Photo[]>([]);
   const [numColumns, setNumColumns] = useState(3);
   const [endCursor, setEndCursor] = useState('0');
   const [hasNext, setHasNext] = useState(true);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(-1);
   const hasInitialized = useRef(false);
 
   const ITEM_SIZE = (SCREEN_WIDTH - GAP * (numColumns + 1)) / numColumns;
 
   const loadPhotos = async () => {
     if (!hasNext) return;
-
     const res = await MediaLibrary.getAssetsAsync({
       first: 50,
       after: endCursor.toString(),
-      sortBy: 'creationTime'
+      sortBy: 'creationTime',
     });
-
-    const images = res.assets.map(asset => ({
-      id: asset.id,
-      uri: asset.uri,
-    }));
-
+    const images = res.assets.map(a => ({ id: a.id, uri: a.uri }));
     setGalleryImages(prev => {
       const existingIds = new Set(prev.map(img => img.id));
-      const newImages = images.filter(img => !existingIds.has(img.id));
-      return [...prev, ...newImages];
+      return [...prev, ...images.filter(img => !existingIds.has(img.id))];
     });
-
     setEndCursor(res.endCursor);
     setHasNext(res.hasNextPage);
   };
 
   const pinchScale = useSharedValue(1);
   const pinchGesture = Gesture.Pinch()
-    .onUpdate((e) => {
-      pinchScale.value = e.scale;
-    })
+    .onUpdate((e) => { pinchScale.value = e.scale; })
     .onEnd(() => {
-      if (pinchScale.value > 1.1) {
-        runOnJS(setNumColumns)(3);
-      } else if (pinchScale.value < 0.9) {
-        runOnJS(setNumColumns)(4);
-      }
+      if (pinchScale.value > 1.1) setNumColumns(3);
+      else if (pinchScale.value < 0.9) setNumColumns(4);
       pinchScale.value = 1;
     });
 
@@ -74,8 +65,8 @@ export default function Home() {
     setLoadingMorePhotos(false);
   };
 
-  const renderItem = useCallback(({ item }: { item: { id: string; uri: string } }) => (
-    <GalleryImage uri={item.uri} />
+  const renderItem = useCallback(({ item, index }: { item: Photo; index: number }) => (
+    <GalleryImage uri={item.uri} onPress={() => setViewerIndex(index)} />
   ), []);
 
   const getItemLayout = useCallback((_: any, index: number) => ({
@@ -85,9 +76,7 @@ export default function Home() {
   }), [ITEM_SIZE, numColumns]);
 
   useEffect(() => {
-    loadPhotos().then(() => {
-      hasInitialized.current = true;
-    });
+    loadPhotos().then(() => { hasInitialized.current = true; });
   }, []);
 
   return (
@@ -111,11 +100,18 @@ export default function Home() {
           windowSize={5}
           ListFooterComponent={
             loadingMorePhotos
-              ? <Text style={{ textAlign: 'center' }}>Loading...</Text>
+              ? <Text style={{ textAlign: 'center', padding: 12 }}>Loading...</Text>
               : null
           }
         />
       </GestureDetector>
+
+      <ImageViewer
+        photos={galleryImages}
+        initialIndex={viewerIndex >= 0 ? viewerIndex : 0}
+        visible={viewerIndex >= 0}
+        onClose={() => setViewerIndex(-1)}
+      />
     </View>
   );
 }
@@ -125,24 +121,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  gridContainer: {
-    padding: 2,
-  },
-  columnWrapper: {
-    gap: 2,
-    marginBottom: 2,
-  },
+  gridContainer: { padding: 2 },
+  columnWrapper: { gap: 2, marginBottom: 2 },
   imageWrapper: {
     flex: 1,
     aspectRatio: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     overflow: 'hidden',
-    backgroundColor: "#ececec"
+    backgroundColor: '#ececec',
   },
   image: {
     width: '100%',
     height: '100%',
     aspectRatio: 1,
-    backgroundColor: "#ececec"
+    backgroundColor: '#ececec',
   },
 });
