@@ -7,12 +7,14 @@ import {
   Dimensions,
   Pressable,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
+import { useFocusEffect } from 'expo-router';
 import { useTheme } from '@/theme/ThemeProvider';
 import Album from '@/src/components/Album/Album';
 import ImageViewer from '@/src/components/Image/ImageViewer';
@@ -50,6 +52,7 @@ function AlbumDetail({
   const [loadingMore, setLoadingMore] = useState(false);
   const [numColumns, setNumColumns] = useState(3);
   const [viewerIndex, setViewerIndex] = useState(-1);
+  const [refreshing, setRefreshing] = useState(false);
   const hasInitialized = useRef(false);
 
   const itemSize = (SCREEN_WIDTH - GAP * (numColumns + 1)) / numColumns;
@@ -79,6 +82,12 @@ function AlbumDetail({
     await loadPhotos(endCursor, images);
     setLoadingMore(false);
   };
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadPhotos('0', []);
+    setRefreshing(false);
+  }, [loadPhotos]);
 
   const pinchScale = useSharedValue(1);
   const pinchGesture = Gesture.Pinch()
@@ -135,6 +144,14 @@ function AlbumDetail({
           initialNumToRender={30}
           maxToRenderPerBatch={20}
           windowSize={5}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="images-outline" size={48} color={theme.colors.text + '33'} />
@@ -154,6 +171,7 @@ function AlbumDetail({
         initialIndex={viewerIndex >= 0 ? viewerIndex : 0}
         visible={viewerIndex >= 0}
         onClose={() => setViewerIndex(-1)}
+        onPhotoDeleted={(id) => setImages((prev) => prev.filter((p) => p.id !== id))}
       />
     </View>
   );
@@ -170,39 +188,36 @@ export default function Albums() {
   const [permission, requestPermission] = MediaLibrary.usePermissions();
   const [albums, setAlbums] = useState<AlbumEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<MediaLibrary.Album | null>(null);
 
   const loadAlbums = useCallback(async () => {
-    setLoading(true);
     const raw = await MediaLibrary.getAlbumsAsync({ includeSmartAlbums: true });
-
-    // Fetch cover (latest photo) for each album in parallel
     const entries = await Promise.all(
       raw.map(async (album): Promise<AlbumEntry> => {
         try {
           const res = await MediaLibrary.getAssetsAsync({
-            album: album.id,
-            first: 1,
-            sortBy: 'creationTime',
-            mediaType: 'photo',
+            album: album.id, first: 1, sortBy: 'creationTime', mediaType: 'photo',
           });
           return { album, coverUri: res.assets[0]?.uri };
-        } catch {
-          return { album };
-        }
+        } catch { return { album }; }
       })
     );
-
-    // Only show albums that have photos
     setAlbums(entries.filter((e) => e.coverUri));
-    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (!permission) return;
-    if (!permission.granted) { requestPermission(); return; }
-    loadAlbums();
-  }, [permission]);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAlbums();
+    setRefreshing(false);
+  }, [loadAlbums]);
+
+  // Initial load + reload on tab focus
+  useFocusEffect(useCallback(() => {
+    if (!permission?.granted) return;
+    setLoading(true);
+    loadAlbums().finally(() => setLoading(false));
+  }, [permission]));
 
   // ── Drill into album ──
   if (selected) {
@@ -213,7 +228,9 @@ export default function Albums() {
   if (!permission?.granted) {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.text }}>Media library permission is required.</Text>
+        <Pressable onPress={requestPermission}>
+          <Text style={{ color: theme.colors.primary }}>Grant media library permission</Text>
+        </Pressable>
       </View>
     );
   }
@@ -244,6 +261,14 @@ export default function Albums() {
             onPress={() => setSelected(item.album)}
           />
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="folder-open-outline" size={52} color={theme.colors.text + '33'} />
